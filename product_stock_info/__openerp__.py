@@ -18,18 +18,20 @@
 
 {
     "name": "Product Stock Info",
-    "version": "1.0",
+    "version": "2.0",
     "depends": [
         "stock",
     ],
     "author": "OdooMRP team,"
               "AvanzOSC,"
-              "Serv. Tecnol. Avanzados - Pedro M. Baeza",
+              "Serv. Tecnol. Avanzados - Pedro M. Baeza, "
+              "FactorLibre",
     "website": "http://www.odoomrp.com",
     "contributors": [
         "Oihane Crucelaegui <oihanecrucelaegi@avanzosc.es>",
         "Pedro M. Baeza <pedro.baeza@serviciosbaeza.com>",
-        "Ana Juaristi <anajuaristi@avanzosc.es>"
+        "Ana Juaristi <anajuaristi@avanzosc.es>",
+        "Ismael Calvo <ismael.calvo@factorlibre.com>"
     ],
     "category": "Tools",
     "summary": "Stock quantities info on products",
