@@ -29,9 +29,9 @@ class ProductProduct(models.Model):
     real_qty_available = fields.Float('Available',
                                       compute='_product_available')
 
-    @api.model
+    @api.multi
     def _product_available(self):
-        res = super(ProductProduct, self)._product_available(self)
+        res = super(ProductProduct, self)._product_available()
         for product in self:
             qty = res[product.id]
             qty['real_qty_available'] = \
@@ -46,9 +46,10 @@ class ProductTemplate(models.Model):
     real_qty_available = fields.Float('Available',
                                       compute='_product_available')
 
-    @api.model
-    def _product_available(self):
-        res = super(ProductProduct, self)._product_available(self)
+    @api.multi
+    def _product_available(self, name=False, arg=False):
+        res = super(ProductTemplate, self)._product_available(name=name,
+                                                              arg=arg)
         for product in self:
             qty = res[product.id]
             qty['real_qty_available'] = \
