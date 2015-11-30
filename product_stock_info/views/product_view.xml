@@ -10,7 +10,7 @@
                     <field name="outgoing_qty" />
                 </field>
                 <field name="virtual_available" position="after">
-                    <field name="real_qty_available"/>
+                    <field name="real_qty_available" string="Available"/>
                 </field>
             </field>
         </record>
@@ -23,7 +23,7 @@
                 <field name="virtual_available" position="after">
                     <field name="incoming_qty" />
                     <field name="outgoing_qty" />
-                    <field name="real_qty_available"/>
+                    <field name="real_qty_available" string="Available"/>
                 </field>
             </field>
         </record>
