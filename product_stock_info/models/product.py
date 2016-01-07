@@ -33,7 +33,7 @@ class ProductProduct(models.Model):
     def _product_available(self):
         res = super(ProductProduct, self)._product_available()
         for product in self:
-            if product:
+            if product and product.id:
                 qty = res[product.id]
                 qty['real_qty_available'] = \
                     qty['qty_available'] - qty['outgoing_qty']
@@ -52,7 +52,7 @@ class ProductTemplate(models.Model):
         res = super(ProductTemplate, self)._product_available(name=name,
                                                               arg=arg)
         for product in self:
-            if product:
+            if product and product.id:
                 qty = res[product.id]
                 qty['real_qty_available'] = \
                     qty['qty_available'] - qty['outgoing_qty']
