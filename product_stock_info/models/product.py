@@ -34,10 +34,11 @@ class ProductProduct(models.Model):
         res = super(ProductProduct, self)._product_available(
             field_names=None, arg=False)
         for product in self:
-            qty = res[product.id]
-            qty['real_qty_available'] = \
-                qty['qty_available'] - qty['outgoing_qty']
-            product.real_qty_available = qty['real_qty_available']
+            if product and product.id:
+                qty = res[product.id]
+                qty['real_qty_available'] = \
+                    qty['qty_available'] - qty['outgoing_qty']
+                product.real_qty_available = qty['real_qty_available']
         return res
 
 
@@ -52,8 +53,9 @@ class ProductTemplate(models.Model):
         res = super(ProductTemplate, self)._product_available(
             field_names=None, arg=False)
         for product in self:
-            qty = res[product.id]
-            qty['real_qty_available'] = \
-                qty['qty_available'] - qty['outgoing_qty']
-            product.real_qty_available = qty['real_qty_available']
+            if product and product.id:
+                qty = res[product.id]
+                qty['real_qty_available'] = \
+                    qty['qty_available'] - qty['outgoing_qty']
+                product.real_qty_available = qty['real_qty_available']
         return res
