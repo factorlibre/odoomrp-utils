@@ -30,8 +30,9 @@ class ProductProduct(models.Model):
                                       compute='_product_available')
 
     @api.multi
-    def _product_available(self):
-        res = super(ProductProduct, self)._product_available()
+    def _product_available(self, field_names=None, arg=False):
+        res = super(ProductProduct, self)._product_available(
+            field_names=None, arg=False)
         for product in self:
             if product and product.id:
                 qty = res[product.id]
@@ -48,9 +49,9 @@ class ProductTemplate(models.Model):
                                       compute='_product_available')
 
     @api.multi
-    def _product_available(self, name=False, arg=False):
-        res = super(ProductTemplate, self)._product_available(name=name,
-                                                              arg=arg)
+    def _product_available(self, field_names=None, arg=False):
+        res = super(ProductTemplate, self)._product_available(
+            field_names=None, arg=False)
         for product in self:
             if product and product.id:
                 qty = res[product.id]
