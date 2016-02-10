@@ -34,11 +34,10 @@ class ProductProduct(models.Model):
         res = super(ProductProduct, self)._product_available(
             field_names=None, arg=False)
         for product in self:
-            if product and product.id:
-                qty = res[product.id]
-                qty['real_qty_available'] = \
-                    qty['qty_available'] - qty['outgoing_qty']
-                product.real_qty_available = qty['real_qty_available']
+            qty = res[product.id]
+            qty['real_qty_available'] = \
+                qty['qty_available'] - qty['outgoing_qty']
+            product.real_qty_available = qty['real_qty_available']
         return res
 
 
@@ -49,13 +48,12 @@ class ProductTemplate(models.Model):
                                       compute='_product_available')
 
     @api.multi
-    def _product_available(self, field_names=None, arg=False):
-        res = super(ProductTemplate, self)._product_available(
-            field_names=None, arg=False)
+    def _product_available(self, name=False, arg=False):
+        res = super(ProductTemplate, self)._product_available(name=name,
+                                                              arg=arg)
         for product in self:
-            if product and product.id:
-                qty = res[product.id]
-                qty['real_qty_available'] = \
-                    qty['qty_available'] - qty['outgoing_qty']
-                product.real_qty_available = qty['real_qty_available']
+            qty = res[product.id]
+            qty['real_qty_available'] = \
+                qty['qty_available'] - qty['outgoing_qty']
+            product.real_qty_available = qty['real_qty_available']
         return res
