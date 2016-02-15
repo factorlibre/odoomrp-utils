@@ -37,6 +37,7 @@ class ProductProduct(models.Model):
             qty = res[product.id]
             qty['real_qty_available'] = \
                 qty['qty_available'] - qty['outgoing_qty']
+            res[product.id]['real_qty_available'] = qty['real_qty_available']
             product.real_qty_available = qty['real_qty_available']
         return res
 
@@ -55,5 +56,6 @@ class ProductTemplate(models.Model):
             qty = res[product.id]
             qty['real_qty_available'] = \
                 qty['qty_available'] - qty['outgoing_qty']
+            res[product.id]['real_qty_available'] = qty['real_qty_available']
             product.real_qty_available = qty['real_qty_available']
         return res
