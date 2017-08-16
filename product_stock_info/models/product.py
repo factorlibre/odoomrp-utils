@@ -19,43 +19,60 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
-from openerp import models, api, fields
+import openerp.addons.decimal_precision as dp
+from openerp import models
+from openerp.osv import fields
 
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    real_qty_available = fields.Float('Available',
-                                      compute='_product_available')
-
-    @api.multi
-    def _product_available(self, field_names=None, arg=False):
+    def _product_available(self, cr, uid, ids, field_names=None, arg=False,
+                           context=None):
         res = super(ProductProduct, self)._product_available(
-            field_names=None, arg=False)
-        for product in self:
-            qty = res[product.id]
-            qty['real_qty_available'] = \
-                qty['qty_available'] - qty['outgoing_qty']
-            res[product.id]['real_qty_available'] = qty['real_qty_available']
-            product.real_qty_available = qty['real_qty_available']
+            cr, uid, ids, field_names=field_names, arg=arg, context=context)
+        for k, v in res.iteritems():
+            res[k]['real_qty_available'] = (
+                v['qty_available'] - v['outgoing_qty'])
         return res
+
+    def _search_product_quantity(self, cr, uid, obj, name, domain, context):
+        return super(ProductProduct, self)._search_product_quantity(
+            cr, uid, obj, name, domain, context)
+
+    _columns = {
+        'real_qty_available': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            fnct_search=_search_product_quantity,
+            string='Available',)
+
+    }
 
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    real_qty_available = fields.Float('Available',
-                                      compute='_product_available')
-
-    @api.multi
-    def _product_available(self, name=False, arg=False):
-        res = super(ProductTemplate, self)._product_available(name=name,
-                                                              arg=arg)
-        for product in self:
-            qty = res[product.id]
-            qty['real_qty_available'] = \
-                qty['qty_available'] - qty['outgoing_qty']
-            res[product.id]['real_qty_available'] = qty['real_qty_available']
-            product.real_qty_available = qty['real_qty_available']
+    def _product_available(self, cr, uid, ids, field_names=None, arg=False,
+                           context=None):
+        res = super(ProductTemplate, self)._product_available(
+            cr, uid, ids, field_names=field_names, arg=arg, context=context)
+        for k, v in res.iteritems():
+            res[k]['real_qty_available'] = (
+                v['qty_available'] - v['outgoing_qty'])
         return res
+
+    def _search_product_quantity(self, cr, uid, obj, name, domain, context):
+        return super(ProductProduct, self)._search_product_quantity(
+            cr, uid, obj, name, domain, context)
+
+    _columns = {
+        'real_qty_available': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            fnct_search=_search_product_quantity,
+            string='Available',)
+
+    }
