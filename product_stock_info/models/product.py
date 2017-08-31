@@ -41,6 +41,65 @@ class ProductProduct(models.Model):
             cr, uid, obj, name, domain, context)
 
     _columns = {
+        'qty_available': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Quantity On Hand',
+            fnct_search=_search_product_quantity,
+            help="Current quantity of products.\n"
+            "In a context with a single Stock Location, this includes "
+            "goods stored at this Location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods stored in the Stock Location of this Warehouse, or any "
+            "of its children.\n"
+            "stored in the Stock Location of the Warehouse of this Shop, "
+            "or any of its children.\n"
+            "Otherwise, this includes goods stored in any Stock Location "
+            "with 'internal' type."),
+        'virtual_available': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Forecast Quantity',
+            fnct_search=_search_product_quantity,
+            help="Forecast quantity (computed as Quantity On Hand "
+            "- Outgoing + Incoming)\n"
+            "In a context with a single Stock Location, this includes "
+            "goods stored in this location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods stored in the Stock Location of this Warehouse, or any "
+            "of its children.\n"
+            "Otherwise, this includes goods stored in any Stock Location "
+            "with 'internal' type."),
+        'incoming_qty': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Incoming',
+            fnct_search=_search_product_quantity,
+            help="Quantity of products that are planned to arrive.\n"
+            "In a context with a single Stock Location, this includes "
+            "goods arriving to this Location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods arriving to the Stock Location of this Warehouse, or "
+            "any of its children.\n"
+            "Otherwise, this includes goods arriving to any Stock "
+            "Location with 'internal' type."),
+        'outgoing_qty': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Outgoing',
+            fnct_search=_search_product_quantity,
+            help="Quantity of products that are planned to leave.\n"
+            "In a context with a single Stock Location, this includes "
+            "goods leaving this Location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods leaving the Stock Location of this Warehouse, or "
+            "any of its children.\n"
+            "Otherwise, this includes goods leaving any Stock "
+            "Location with 'internal' type."),
         'real_qty_available': fields.function(
             _product_available, multi='qty_available',
             type='float',
@@ -68,6 +127,65 @@ class ProductTemplate(models.Model):
             cr, uid, obj, name, domain, context)
 
     _columns = {
+        'qty_available': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Quantity On Hand',
+            fnct_search=_search_product_quantity,
+            help="Current quantity of products.\n"
+            "In a context with a single Stock Location, this includes "
+            "goods stored at this Location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods stored in the Stock Location of this Warehouse, or any "
+            "of its children.\n"
+            "stored in the Stock Location of the Warehouse of this Shop, "
+            "or any of its children.\n"
+            "Otherwise, this includes goods stored in any Stock Location "
+            "with 'internal' type."),
+        'virtual_available': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Forecast Quantity',
+            fnct_search=_search_product_quantity,
+            help="Forecast quantity (computed as Quantity On Hand "
+            "- Outgoing + Incoming)\n"
+            "In a context with a single Stock Location, this includes "
+            "goods stored in this location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods stored in the Stock Location of this Warehouse, or any "
+            "of its children.\n"
+            "Otherwise, this includes goods stored in any Stock Location "
+            "with 'internal' type."),
+        'incoming_qty': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Incoming',
+            fnct_search=_search_product_quantity,
+            help="Quantity of products that are planned to arrive.\n"
+            "In a context with a single Stock Location, this includes "
+            "goods arriving to this Location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods arriving to the Stock Location of this Warehouse, or "
+            "any of its children.\n"
+            "Otherwise, this includes goods arriving to any Stock "
+            "Location with 'internal' type."),
+        'outgoing_qty': fields.function(
+            _product_available, multi='qty_available',
+            type='float',
+            digits_compute=dp.get_precision('Product Unit of Measure'),
+            string='Outgoing',
+            fnct_search=_search_product_quantity,
+            help="Quantity of products that are planned to leave.\n"
+            "In a context with a single Stock Location, this includes "
+            "goods leaving this Location, or any of its children.\n"
+            "In a context with a single Warehouse, this includes "
+            "goods leaving the Stock Location of this Warehouse, or "
+            "any of its children.\n"
+            "Otherwise, this includes goods leaving any Stock "
+            "Location with 'internal' type."),
         'real_qty_available': fields.function(
             _product_available, multi='qty_available',
             type='float',
