@@ -113,10 +113,9 @@ class ProductProduct(models.Model):
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    def _product_available(self, cr, uid, ids, field_names=None, arg=False,
-                           context=None):
+    def _product_available(self, cr, uid, ids, name, arg, context=None):
         res = super(ProductTemplate, self)._product_available(
-            cr, uid, ids, field_names=field_names, arg=arg, context=context)
+            cr, uid, ids, name, arg, context=context)
         for k, v in res.iteritems():
             res[k]['real_qty_available'] = (
                 v['qty_available'] - v['outgoing_qty'])
