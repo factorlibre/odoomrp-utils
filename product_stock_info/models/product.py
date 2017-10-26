@@ -40,6 +40,34 @@ class ProductProduct(models.Model):
         return super(ProductProduct, self)._search_product_quantity(
             cr, uid, obj, name, domain, context)
 
+    def _search_product_quantity_real(self, cr, uid, obj, name, domain,
+                                      context):
+        res = []
+        for field, operator, value in domain:
+            # to prevent sql injections
+            assert field in ('real_qty_available'), \
+                'Invalid domain left operand'
+            assert operator in (
+                '<', '>', '=', '!=', '<=', '>='), 'Invalid domain operator'
+            assert isinstance(
+                value, (float, int)), 'Invalid domain right operand'
+
+            if operator == '=':
+                operator = '=='
+
+            ids = []
+            product_ids = self.search(cr, uid, [], context=context)
+            if product_ids:
+                product_qty_available = self._product_available(
+                    cr, uid, product_ids, context=context)
+                for product_id, qty_values in \
+                        product_qty_available.iteritems():
+                    if eval(str(qty_values.get(field, 0.0)) + operator +
+                            str(value)):
+                        ids.append(product_id)
+                res.append(('id', 'in', ids))
+        return res
+
     _columns = {
         'qty_available': fields.function(
             _product_available, multi='qty_available',
@@ -104,7 +132,7 @@ class ProductProduct(models.Model):
             _product_available, multi='qty_available',
             type='float',
             digits_compute=dp.get_precision('Product Unit of Measure'),
-            fnct_search=_search_product_quantity,
+            fnct_search=_search_product_quantity_real,
             string='Available',)
 
     }
@@ -122,8 +150,14 @@ class ProductTemplate(models.Model):
         return res
 
     def _search_product_quantity(self, cr, uid, obj, name, domain, context):
-        return super(ProductProduct, self)._search_product_quantity(
+        return super(ProductTemplate, self)._search_product_quantity(
             cr, uid, obj, name, domain, context)
+
+    def _search_product_quantity_real(self, cr, uid, obj, name, domain,
+                                      context):
+        prod = self.pool.get("product.product")
+        product_variant_ids = prod.search(cr, uid, domain, context=context)
+        return [('product_variant_ids', 'in', product_variant_ids)]
 
     _columns = {
         'qty_available': fields.function(
@@ -189,7 +223,7 @@ class ProductTemplate(models.Model):
             _product_available, multi='qty_available',
             type='float',
             digits_compute=dp.get_precision('Product Unit of Measure'),
-            fnct_search=_search_product_quantity,
+            fnct_search=_search_product_quantity_real,
             string='Available',)
 
     }
