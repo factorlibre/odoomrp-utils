@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
@@ -20,210 +19,92 @@
 #
 ##############################################################################
 import openerp.addons.decimal_precision as dp
-from openerp import models
-from openerp.osv import fields
+from openerp.addons.stock.models.product import OPERATORS
+from odoo.exceptions import UserError
+from openerp import api, models, fields
 
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    def _product_available(self, cr, uid, ids, field_names=None, arg=False,
-                           context=None):
-        res = super(ProductProduct, self)._product_available(
-            cr, uid, ids, field_names=field_names, arg=arg, context=context)
-        for k, v in res.iteritems():
-            res[k]['real_qty_available'] = (
-                v['qty_available'] - v['outgoing_qty'])
+    @api.depends('stock_move_ids.product_qty', 'stock_move_ids.state')
+    def _compute_quantities(self):
+        super(ProductProduct, self)._compute_quantities()
+
+        res = self._compute_quantities_dict(
+            self._context.get('lot_id'), self._context.get('owner_id'),
+            self._context.get('package_id'), self._context.get('from_date'),
+            self._context.get('to_date'))
+
+        for product in self:
+            product.real_qty_available = res[product.id]['real_qty_available']
+
+    def _compute_quantities_dict(self, lot_id, owner_id, package_id,
+                                 from_date=False, to_date=False):
+        res = super(ProductProduct, self)._compute_quantities_dict(
+            lot_id, owner_id, package_id, from_date=from_date, to_date=to_date)
+
+        for product in self.with_context(prefetch_fields=False):
+            res[product.id]['real_qty_available'] = (
+                res[product.id]['qty_available'] -
+                res[product.id]['outgoing_qty'])
+
         return res
 
-    def _search_product_quantity(self, cr, uid, obj, name, domain, context):
-        return super(ProductProduct, self)._search_product_quantity(
-            cr, uid, obj, name, domain, context)
+    def _search_real_qty_available(self, operator, value):
+        return self._search_product_real_quantity(
+            operator, value, 'real_qty_available')
 
-    def _search_product_quantity_real(self, cr, uid, obj, name, domain,
-                                      context):
-        res = []
-        for field, operator, value in domain:
-            # to prevent sql injections
-            assert field in ('real_qty_available'), \
-                'Invalid domain left operand'
-            assert operator in (
-                '<', '>', '=', '!=', '<=', '>='), 'Invalid domain operator'
-            assert isinstance(
-                value, (float, int)), 'Invalid domain right operand'
+    def _search_product_real_quantity(self, operator, value, field):
+        if field not in ('real_qty_available'):
+            raise UserError(('Invalid domain left operand %s') % field)
+        if operator not in ('<', '>', '=', '!=', '<=', '>='):
+            raise UserError(('Invalid domain operator %s') % operator)
+        if not isinstance(value, (float, int)):
+            raise UserError(('Invalid domain right operand %s') % value)
 
-            if operator == '=':
-                operator = '=='
+        ids = []
+        for product in self.search([]):
+            if OPERATORS[operator](product[field], value):
+                ids.append(product.id)
+        return [('id', 'in', ids)]
 
-            ids = []
-            product_ids = self.search(cr, uid, [], context=context)
-            if product_ids:
-                product_qty_available = self._product_available(
-                    cr, uid, product_ids, context=context)
-                for product_id, qty_values in \
-                        product_qty_available.iteritems():
-                    if eval(str(qty_values.get(field, 0.0)) + operator +
-                            str(value)):
-                        ids.append(product_id)
-                res.append(('id', 'in', ids))
-        return res
+    real_qty_available = fields.Float(
+        string='Available',
+        digits=dp.get_precision('Product Unit of Measure'),
+        search='_search_real_qty_available',
+        compute='_compute_quantities')
 
-    _columns = {
-        'qty_available': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Quantity On Hand',
-            fnct_search=_search_product_quantity,
-            help="Current quantity of products.\n"
-            "In a context with a single Stock Location, this includes "
-            "goods stored at this Location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods stored in the Stock Location of this Warehouse, or any "
-            "of its children.\n"
-            "stored in the Stock Location of the Warehouse of this Shop, "
-            "or any of its children.\n"
-            "Otherwise, this includes goods stored in any Stock Location "
-            "with 'internal' type."),
-        'virtual_available': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Forecast Quantity',
-            fnct_search=_search_product_quantity,
-            help="Forecast quantity (computed as Quantity On Hand "
-            "- Outgoing + Incoming)\n"
-            "In a context with a single Stock Location, this includes "
-            "goods stored in this location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods stored in the Stock Location of this Warehouse, or any "
-            "of its children.\n"
-            "Otherwise, this includes goods stored in any Stock Location "
-            "with 'internal' type."),
-        'incoming_qty': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Incoming',
-            fnct_search=_search_product_quantity,
-            help="Quantity of products that are planned to arrive.\n"
-            "In a context with a single Stock Location, this includes "
-            "goods arriving to this Location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods arriving to the Stock Location of this Warehouse, or "
-            "any of its children.\n"
-            "Otherwise, this includes goods arriving to any Stock "
-            "Location with 'internal' type."),
-        'outgoing_qty': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Outgoing',
-            fnct_search=_search_product_quantity,
-            help="Quantity of products that are planned to leave.\n"
-            "In a context with a single Stock Location, this includes "
-            "goods leaving this Location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods leaving the Stock Location of this Warehouse, or "
-            "any of its children.\n"
-            "Otherwise, this includes goods leaving any Stock "
-            "Location with 'internal' type."),
-        'real_qty_available': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            fnct_search=_search_product_quantity_real,
-            string='Available',)
-
-    }
 
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    def _product_available(self, cr, uid, ids, name, arg, context=None):
-        res = super(ProductTemplate, self)._product_available(
-            cr, uid, ids, name, arg, context=context)
-        for k, v in res.iteritems():
-            res[k]['real_qty_available'] = (
-                v['qty_available'] - v['outgoing_qty'])
+    def _compute_quantities(self):
+        super(ProductTemplate, self)._compute_quantities()
+
+        res = self._compute_quantities_dict()
+
+        for template in self:
+            template.real_qty_available = res[template.id]['real_qty_available']
+
+    def _compute_quantities_dict(self):
+        res = super(ProductTemplate, self)._compute_quantities_dict()
+
+        for template in self:
+            res[template.id]['real_qty_available'] = (
+                res[template.id]['qty_available'] -
+                res[template.id]['outgoing_qty'])
+
         return res
 
-    def _search_product_quantity(self, cr, uid, obj, name, domain, context):
-        return super(ProductTemplate, self)._search_product_quantity(
-            cr, uid, obj, name, domain, context)
+    def _search_real_qty_available(self, operator, value):
+        domain = [('real_qty_available', operator, value)]
+        product_variant_ids = self.env['product.product'].search(domain)
+        return [('product_variant_ids', 'in', product_variant_ids.ids)]
 
-    def _search_product_quantity_real(self, cr, uid, obj, name, domain,
-                                      context):
-        prod = self.pool.get("product.product")
-        product_variant_ids = prod.search(cr, uid, domain, context=context)
-        return [('product_variant_ids', 'in', product_variant_ids)]
-
-    _columns = {
-        'qty_available': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Quantity On Hand',
-            fnct_search=_search_product_quantity,
-            help="Current quantity of products.\n"
-            "In a context with a single Stock Location, this includes "
-            "goods stored at this Location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods stored in the Stock Location of this Warehouse, or any "
-            "of its children.\n"
-            "stored in the Stock Location of the Warehouse of this Shop, "
-            "or any of its children.\n"
-            "Otherwise, this includes goods stored in any Stock Location "
-            "with 'internal' type."),
-        'virtual_available': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Forecast Quantity',
-            fnct_search=_search_product_quantity,
-            help="Forecast quantity (computed as Quantity On Hand "
-            "- Outgoing + Incoming)\n"
-            "In a context with a single Stock Location, this includes "
-            "goods stored in this location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods stored in the Stock Location of this Warehouse, or any "
-            "of its children.\n"
-            "Otherwise, this includes goods stored in any Stock Location "
-            "with 'internal' type."),
-        'incoming_qty': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Incoming',
-            fnct_search=_search_product_quantity,
-            help="Quantity of products that are planned to arrive.\n"
-            "In a context with a single Stock Location, this includes "
-            "goods arriving to this Location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods arriving to the Stock Location of this Warehouse, or "
-            "any of its children.\n"
-            "Otherwise, this includes goods arriving to any Stock "
-            "Location with 'internal' type."),
-        'outgoing_qty': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            string='Outgoing',
-            fnct_search=_search_product_quantity,
-            help="Quantity of products that are planned to leave.\n"
-            "In a context with a single Stock Location, this includes "
-            "goods leaving this Location, or any of its children.\n"
-            "In a context with a single Warehouse, this includes "
-            "goods leaving the Stock Location of this Warehouse, or "
-            "any of its children.\n"
-            "Otherwise, this includes goods leaving any Stock "
-            "Location with 'internal' type."),
-        'real_qty_available': fields.function(
-            _product_available, multi='qty_available',
-            type='float',
-            digits_compute=dp.get_precision('Product Unit of Measure'),
-            fnct_search=_search_product_quantity_real,
-            string='Available',)
-
-    }
+    real_qty_available = fields.Float(
+        digits=dp.get_precision('Product Unit of Measure'),
+        search='_search_real_qty_available',
+        compute='_compute_quantities',
+        string='Available',)

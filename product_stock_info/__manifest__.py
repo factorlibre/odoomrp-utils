@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 ##############################################################################
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -18,7 +17,7 @@
 
 {
     "name": "Product Stock Info",
-    "version": "2.0",
+    "version": "11.0.1.0.0",
     "depends": [
         "stock",
     ],
@@ -31,7 +30,8 @@
         "Oihane Crucelaegui <oihanecrucelaegi@avanzosc.es>",
         "Pedro M. Baeza <pedro.baeza@serviciosbaeza.com>",
         "Ana Juaristi <anajuaristi@avanzosc.es>",
-        "Ismael Calvo <ismael.calvo@factorlibre.com>"
+        "Ismael Calvo <ismael.calvo@factorlibre.com>",
+        "Rodrigo Bonilla <rodrigo.bonilla@factorlibre.com>"
     ],
     "category": "Tools",
     "summary": "Stock quantities info on products",

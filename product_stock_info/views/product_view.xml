@@ -1,32 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<openerp>
-    <data>
-        <record model="ir.ui.view" id="template_stock_quantities_form_view">
-            <field name="name">template.stock_quantities.form</field>
-            <field name="model">product.template</field>
-            <field name="inherit_id" ref="stock.view_template_property_form" />
-            <field name="arch" type="xml">
-                <field name="virtual_available" position="before">
-                    <field name="outgoing_qty" />
-                </field>
-                <field name="virtual_available" position="after">
-                    <field name="real_qty_available" string="Available"/>
-                </field>
+<odoo>
+    <!-- view used for product.product only -->
+    <record model="ir.ui.view" id="product_stock_quantities_form_view">
+        <field name="name">product.stock_quantities.form</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view" />
+        <field name="arch" type="xml">
+            <field name="lst_price" position="before">
+                <field name="real_qty_available" string="Available" attrs="{'invisible':[('type', '!=', 'product')]}"/>
             </field>
-        </record>
+        </field>
+    </record>
 
-        <record model="ir.ui.view" id="product_stock_quantities_tree_view">
-            <field name="name">product.stock_quantities.tree</field>
-            <field name="model">product.product</field>
-            <field name="inherit_id" ref="stock.view_stock_product_tree" />
-            <field name="arch" type="xml">
-                <field name="virtual_available" position="after">
-                    <field name="incoming_qty" />
-                    <field name="outgoing_qty" />
-                    <field name="real_qty_available" string="Available"/>
-                </field>
+    <record model="ir.ui.view" id="product_stock_quantities_tree_view">
+        <field name="name">product.stock_quantities.tree</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_product_tree_view" />
+        <field name="arch" type="xml">
+            <field name="virtual_available" position="after">
+                <field name="incoming_qty" />
+                <field name="outgoing_qty" />
+                <field name="real_qty_available" string="Available"/>
             </field>
-        </record>
+        </field>
+    </record>
 
-    </data>
-</openerp>
+    <!-- view used for product.template only -->
+    <record model="ir.ui.view" id="template_stock_quantities_form_view">
+        <field name="name">template.stock_quantities.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view" />
+        <field name="arch" type="xml">
+            <field name="list_price" position="before">
+                <field name="real_qty_available" string="Available" attrs="{'invisible':[('type', '!=', 'product')]}"/>
+            </field>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="template_stock_quantities_tree_view">
+        <field name="name">template.stock_quantities.tree</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view" />
+        <field name="arch" type="xml">
+            <field name="virtual_available" position="after">
+                <field name="incoming_qty" />
+                <field name="outgoing_qty" />
+                <field name="real_qty_available" string="Available"/>
+            </field>
+        </field>
+    </record>
+</odoo>
