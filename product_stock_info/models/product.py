@@ -27,11 +27,9 @@ from openerp import api, models, fields
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    @api.depends('stock_move_ids.product_qty', 'stock_move_ids.state')
-    def _compute_quantities(self):
-        super(ProductProduct, self)._compute_quantities()
-
-        res = self._compute_quantities_dict(
+    @api.multi
+    def _compute_real_qty(self):
+        res = self._compute_real_qty_dict(
             self._context.get('lot_id'), self._context.get('owner_id'),
             self._context.get('package_id'), self._context.get('from_date'),
             self._context.get('to_date'))
@@ -39,9 +37,9 @@ class ProductProduct(models.Model):
         for product in self:
             product.real_qty_available = res[product.id]['real_qty_available']
 
-    def _compute_quantities_dict(self, lot_id, owner_id, package_id,
-                                 from_date=False, to_date=False):
-        res = super(ProductProduct, self)._compute_quantities_dict(
+    def _compute_real_qty_dict(self, lot_id, owner_id, package_id,
+                               from_date=False, to_date=False):
+        res = self._compute_quantities_dict(
             lot_id, owner_id, package_id, from_date=from_date, to_date=to_date)
 
         for product in self.with_context(prefetch_fields=False):
@@ -73,23 +71,21 @@ class ProductProduct(models.Model):
         string='Available',
         digits=dp.get_precision('Product Unit of Measure'),
         search='_search_real_qty_available',
-        compute='_compute_quantities')
-
+        compute='_compute_real_qty')
 
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    def _compute_quantities(self):
-        super(ProductTemplate, self)._compute_quantities()
-
-        res = self._compute_quantities_dict()
+    def _compute_real_qty(self):
+        res = self._compute_real_qty_dict()
 
         for template in self:
-            template.real_qty_available = res[template.id]['real_qty_available']
+            template.real_qty_available = res[template.id][
+                'real_qty_available']
 
-    def _compute_quantities_dict(self):
-        res = super(ProductTemplate, self)._compute_quantities_dict()
+    def _compute_real_qty_dict(self):
+        res = self._compute_quantities_dict()
 
         for template in self:
             res[template.id]['real_qty_available'] = (
@@ -106,5 +102,5 @@ class ProductTemplate(models.Model):
     real_qty_available = fields.Float(
         digits=dp.get_precision('Product Unit of Measure'),
         search='_search_real_qty_available',
-        compute='_compute_quantities',
+        compute='_compute_real_qty',
         string='Available',)
